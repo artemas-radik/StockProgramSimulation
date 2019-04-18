@@ -1,0 +1,496 @@
+import java.util.ArrayList;
+
+public class StockBroker {
+
+	public final String BROKER_NAME;
+	private ArrayList<StockTrade> trades = new ArrayList<StockTrade>();
+	private ArrayList<String> names = new ArrayList<String>();
+	private ArrayList<String> tickers = new ArrayList<String>();
+	
+	public StockBroker(String name) {
+		BROKER_NAME = name;
+	}
+	
+	public void process(StockTrade temp) {
+		String name = temp.getClientName();
+		String ticker = temp.getStockTicker();
+		if(!names.contains(name)) {
+			names.add(name);
+		}
+		if(!tickers.contains(ticker)) {
+			tickers.add(ticker);
+		}
+		temp.setTradeTime();
+		trades.add(temp);
+	}
+	
+	public ArrayList<StockTrade> getTradesByClient(String client) { //CLIENTS PER BROKER!!!!!!
+		ArrayList<StockTrade> toReturn = new ArrayList<StockTrade>();
+		for(StockTrade element : trades) {
+			if(element.getClientName().equals(client)) {
+				toReturn.add(new StockTrade(element));
+			}
+		}
+		return toReturn;
+	}
+	
+	public ArrayList<StockTrade> getTradesByTicker(String ticker) {
+		ArrayList<StockTrade> toReturn = new ArrayList<StockTrade>();
+		for(StockTrade element : trades) {
+			if(element.getStockTicker().equals(ticker)) {
+				toReturn.add(new StockTrade(element));
+			}
+		}
+		return toReturn;
+	}
+	
+	public double sellTotalByClient(String client) { //CLIENTS PER BROKER!!!!!!
+		double total = 0;
+		for(StockTrade element : getTradesByClient(client)) {
+			if(element.getType().equals(StockTrade.SELL_TRADE)) {
+				total+= (element.getPrice()*element.getShares());
+			}
+		}
+		return total;
+	}
+	
+	public double buyTotalByClient(String client) { //CLIENTS PER BROKER!!!!!!
+		double total = 0;
+		for(StockTrade element : getTradesByClient(client)) {
+			if(element.getType().equals(StockTrade.BUY_TRADE)) {
+				total+= (element.getPrice()*element.getShares());
+			}
+		}
+		return total;
+	}
+	
+	public double sellTotalByTicker(String ticker) {
+		double total = 0;
+		for(StockTrade element : getTradesByTicker(ticker)) {
+			if(element.getType().equals(StockTrade.SELL_TRADE)) {
+				total+= (element.getPrice()*element.getShares());
+			}
+		}
+		return total;
+	}
+	
+	public double buyTotalByTicker(String ticker) {
+		double total = 0;
+		for(StockTrade element : getTradesByTicker(ticker)) {
+			if(element.getType().equals(StockTrade.BUY_TRADE)) {
+				total+= (element.getPrice()*element.getShares());
+			}
+		}
+		return total;
+	}
+	
+	public void merge(StockBroker old) {
+		for(String name : old.names) {
+			if(!this.names.contains(name)) {
+				this.names.add(name);
+				for(StockTrade trade : old.trades) {
+					if(trade.getClientName().equals(name)) {
+						this.trades.add(trade);
+					}
+				}
+			}
+		}
+	}
+	
+	public String toString() {
+		String toReturn =  "[BROKER_NAME]: "+BROKER_NAME+", [number of trades]: "+
+	trades.size()+", [number of clients]: "+names.size()+", \n";
+		
+		toReturn+= "--------------------INFO BY CLIENT---------------------\n";
+		for(String name : names) {
+			toReturn+= "=========================================\n";
+			toReturn+= "[clientName]= "+name+", [sellTotalByClient]: "+sellTotalByClient(name)
+		+", [buyTotalByClient]: "+buyTotalByClient(name)+"\n";
+			for(StockTrade trade : getTradesByClient(name)) {
+				toReturn+= trade.toString();
+			}
+		}
+		toReturn+= "--------------------INFO BY TICKER---------------------\n";
+		for(String ticker : tickers) {
+			toReturn+= "=========================================\n";
+			toReturn+= "[stockTicker]= "+ticker+", [sellTotalByTicker]: "+sellTotalByTicker(ticker)
+		+", [buyTotalByTicker]: "+buyTotalByTicker(ticker)+"\n";
+			for(StockTrade trade : getTradesByTicker(ticker)) {
+				toReturn+= trade.toString();
+			}
+		}
+		return toReturn;
+	}
+	
+	public void removeClient(String client) {
+		this.names.remove(client);
+		for(int x = 0; x<this.trades.size(); x++) {
+			if(this.trades.get(x).getClientName().equals(client)) {
+				this.trades.remove(x);
+				x--;
+			}
+		}
+	}
+}
+
+import java.time.LocalDateTime;
+
+public class StockTrade {
+
+	public static final String BUY_TRADE = "BUY";
+	public static final String SELL_TRADE = "SELL";
+	private String stockTicker;
+	private String clientName;
+	private double price;
+	private int shares;
+	private String time;
+	private String type;
+	
+	public StockTrade(String stockTicker, String clientName,
+			double price, String type, int shares) {
+		this.stockTicker = stockTicker;
+		this.clientName = clientName;
+		this.price = price;
+		this.type = type;
+		this.shares = shares;
+	}
+	
+	public StockTrade(StockTrade old) { //NEED METHODS HERE??
+		//- does private allow class-wide access from any instance?
+		this.stockTicker = old.stockTicker;
+		this.clientName = old.clientName;
+		this.price = old.price;
+		this.type = old.type;
+		this.shares = old.shares;
+		this.time = old.time; //Remember this
+	}
+	
+	public void setTradeTime() {
+		this.time = LocalDateTime.now().toString();
+	}
+	
+	public String toString() {
+		return "[stockTicker]= "+stockTicker+", [clientName]= "+clientName+", [price]= "+
+	price+", [shares]= "+shares+", [time]= "+time+", [type]= "+type+", \n";
+	}
+	
+	public String getClientName() {
+		return clientName;
+	}
+	
+	public String getStockTicker() {
+		return stockTicker;
+	}
+	
+	public String getType() {
+		return type;
+	}
+	
+	public double getPrice() {
+		return price;
+	}
+	
+	public double getShares() {
+		return shares;
+	}
+
+}
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class StockBrokerTest {
+	
+	private final static String[] availibleTickers = {"AMZN", "GOOG", "AAPL"};
+	private final static String[] availibleClients = {"Elon_Musk", "Tim_Cook", "Sergey_Brin"};
+	private final static double MIN_PRICE = 0;
+	private final static double MAX_PRICE = 1000;
+	private final static String[] availibleTypes = {StockTrade.BUY_TRADE, StockTrade.SELL_TRADE};
+	private final static int MIN_SHARES = 0;
+	private final static int MAX_SHARES = 1000;
+	private final static String SEPERATOR = ", ";
+	private final static int NUM_TRADES = 20;
+	private final static int NUM_BROKERS = 3;
+	
+	private static ArrayList<StockBroker> brokers = new ArrayList<StockBroker>();
+	
+	public static void main(String[] args) {
+		
+		for(int x = 0; x<NUM_BROKERS; x++) {
+			brokers.add(new StockBroker("Broker"+(x+1)));
+			setRandomTrades(brokers.get(x));
+			System.out.println(brokers.get(x).toString());
+		}
+		
+		brokers.get(2).removeClient("Elon_Musk");
+		System.out.println("\"Elon_Musk\" removed from \"Broker3\" version:\n"+brokers.get(2).toString());
+		
+	}
+	
+	public static void setRandomTrades(StockBroker stockBroker) {
+		final String fileName = "autoGeneratedTrades"+stockBroker.BROKER_NAME+".txt";
+		autoGenerateTrades(fileName);
+		String[] trades = loadTrades(fileName);
+		
+		for(String element : trades) {
+			String[] parameters = element.split(", ");
+			String stockTicker = parameters[0];
+			String clientName = parameters[1];
+			double price = Double.parseDouble(parameters[2]);
+			String type = parameters[3];
+			int shares = Integer.parseInt(parameters[4]);
+			stockBroker.process(new StockTrade(stockTicker, clientName, price, type, shares));
+		}
+	}
+	
+	public static void autoGenerateTrades(String fileName) {
+		try {
+			File file = new File(fileName);
+			FileWriter fileWriter = new FileWriter(file);
+			for(int x = 0; x<NUM_TRADES; x++) {
+				String toWrite = "";
+				toWrite += availibleTickers[(int) (Math.random() * availibleTickers.length)] + SEPERATOR;
+				toWrite += availibleClients[(int) (Math.random() * availibleClients.length)] + SEPERATOR;
+				toWrite += (Math.random() * (MAX_PRICE - MIN_PRICE) + MIN_PRICE) + SEPERATOR;
+				toWrite += availibleTypes[(int) (Math.random() * availibleTypes.length)] + SEPERATOR;
+				toWrite += (int) (Math.random() * (MAX_SHARES - MIN_SHARES) + MIN_SHARES) + SEPERATOR;
+				fileWriter.write(toWrite + "\n");
+			}
+			fileWriter.flush();
+			fileWriter.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static String[] loadTrades(String fileName) {
+		//read!!!!!!
+		try {
+			FileReader fileReader = new FileReader(fileName);
+			StringBuffer stringBuffer = new StringBuffer();
+			int charsRead;
+			char[] charArr = new char[1024];
+			while((charsRead = fileReader.read(charArr)) > 0) {
+				stringBuffer.append(charArr, 0, charsRead);
+			}
+			fileReader.close();
+			return stringBuffer.toString().split("\n");
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+}
+
+Sample Output: 
+
+[BROKER_NAME]: Broker1, [number of trades]: 20, [number of clients]: 3, 
+--------------------INFO BY CLIENT---------------------
+=========================================
+[clientName]= Sergey_Brin, [sellTotalByClient]: 775716.2375109924, [buyTotalByClient]: 188488.50914118963
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 262.6976903489752, [shares]= 238, [time]= 2018-12-18T00:00:20.051173700, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 876.6991183768533, [shares]= 260, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 797.7268172798967, [shares]= 515, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 876.6907401915796, [shares]= 215, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 576.9232986884308, [shares]= 129, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+=========================================
+[clientName]= Elon_Musk, [sellTotalByClient]: 386943.10815390607, [buyTotalByClient]: 2179806.4361915872
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 42.61980430496393, [shares]= 59, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 881.8768707246313, [shares]= 876, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 540.763497274367, [shares]= 807, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 656.514211928612, [shares]= 671, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 500.2281373379257, [shares]= 524, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 294.0825184872845, [shares]= 847, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 448.78071573851884, [shares]= 66, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 169.82797848820817, [shares]= 735, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 547.5673188589722, [shares]= 455, [time]= 2018-12-18T00:00:20.054172900, [type]= BUY, 
+=========================================
+[clientName]= Tim_Cook, [sellTotalByClient]: 108997.80304361788, [buyTotalByClient]: 693989.5280954092
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 451.1511753801412, [shares]= 859, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 348.99123539595945, [shares]= 453, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 176.95959453544873, [shares]= 276, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 80.53693076874357, [shares]= 141, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 966.1824341525677, [shares]= 103, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 333.2494737379694, [shares]= 293, [time]= 2018-12-18T00:00:20.054172900, [type]= SELL, 
+--------------------INFO BY TICKER---------------------
+=========================================
+[stockTicker]= GOOG, [sellTotalByTicker]: 160164.14610828113, [buyTotalByTicker]: 436396.14230041415
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 262.6976903489752, [shares]= 238, [time]= 2018-12-18T00:00:20.051173700, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 540.763497274367, [shares]= 807, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 333.2494737379694, [shares]= 293, [time]= 2018-12-18T00:00:20.054172900, [type]= SELL, 
+=========================================
+[stockTicker]= AAPL, [sellTotalByTicker]: 352765.3349668149, [buyTotalByTicker]: 521495.9799886176
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 42.61980430496393, [shares]= 59, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 876.6991183768533, [shares]= 260, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 656.514211928612, [shares]= 671, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 176.95959453544873, [shares]= 276, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 448.78071573851884, [shares]= 66, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 169.82797848820817, [shares]= 735, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+=========================================
+[stockTicker]= AMZN, [sellTotalByTicker]: 758727.6676334202, [buyTotalByTicker]: 2104392.3511391543
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 881.8768707246313, [shares]= 876, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 797.7268172798967, [shares]= 515, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 876.6907401915796, [shares]= 215, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 451.1511753801412, [shares]= 859, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 500.2281373379257, [shares]= 524, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 348.99123539595945, [shares]= 453, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 576.9232986884308, [shares]= 129, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 80.53693076874357, [shares]= 141, [time]= 2018-12-18T00:00:20.053172700, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 966.1824341525677, [shares]= 103, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 294.0825184872845, [shares]= 847, [time]= 2018-12-18T00:00:20.053172700, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 547.5673188589722, [shares]= 455, [time]= 2018-12-18T00:00:20.054172900, [type]= BUY, 
+
+[BROKER_NAME]: Broker2, [number of trades]: 20, [number of clients]: 3, 
+--------------------INFO BY CLIENT---------------------
+=========================================
+[clientName]= Elon_Musk, [sellTotalByClient]: 730250.9518655975, [buyTotalByClient]: 869827.0189663506
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 32.2426337509506, [shares]= 712, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 505.750657103045, [shares]= 135, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 560.5763576379975, [shares]= 666, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 399.2300780106549, [shares]= 89, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 638.6040124970999, [shares]= 36, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 935.5387268136383, [shares]= 246, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 504.8685217653488, [shares]= 401, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 686.2460035021833, [shares]= 939, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+=========================================
+[clientName]= Sergey_Brin, [sellTotalByClient]: 1224245.6649276526, [buyTotalByClient]: 1091886.964170135
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 601.3830204757453, [shares]= 139, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 397.5080035260171, [shares]= 940, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 790.1679804133651, [shares]= 391, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 409.1495133529783, [shares]= 837, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 329.55626862735556, [shares]= 396, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 708.9604652921255, [shares]= 682, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 630.3360173359465, [shares]= 106, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 639.1239142910941, [shares]= 824, [time]= 2018-12-18T00:00:20.058173500, [type]= SELL, 
+=========================================
+[clientName]= Tim_Cook, [sellTotalByClient]: 1439770.2626635842, [buyTotalByClient]: 584512.4453238915
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 776.5886548211915, [shares]= 991, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 748.7943080846742, [shares]= 895, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 834.2525504684669, [shares]= 367, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 307.2204848807552, [shares]= 906, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+--------------------INFO BY TICKER---------------------
+=========================================
+[stockTicker]= AMZN, [sellTotalByTicker]: 188992.51455005794, [buyTotalByTicker]: 1025071.3463325247
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 32.2426337509506, [shares]= 712, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 397.5080035260171, [shares]= 940, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 790.1679804133651, [shares]= 391, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Elon_Musk, [price]= 399.2300780106549, [shares]= 89, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 409.1495133529783, [shares]= 837, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 329.55626862735556, [shares]= 396, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+=========================================
+[stockTicker]= GOOG, [sellTotalByTicker]: 525212.432741946, [buyTotalByTicker]: 22989.744449895596
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 505.750657103045, [shares]= 135, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 601.3830204757453, [shares]= 139, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 560.5763576379975, [shares]= 666, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 638.6040124970999, [shares]= 36, [time]= 2018-12-18T00:00:20.057175400, [type]= BUY, 
+=========================================
+[stockTicker]= AAPL, [sellTotalByTicker]: 2680061.93216483, [buyTotalByTicker]: 1498165.337677957
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 776.5886548211915, [shares]= 991, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 748.7943080846742, [shares]= 895, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 935.5387268136383, [shares]= 246, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 708.9604652921255, [shares]= 682, [time]= 2018-12-18T00:00:20.057175400, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 834.2525504684669, [shares]= 367, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 504.8685217653488, [shares]= 401, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 630.3360173359465, [shares]= 106, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 686.2460035021833, [shares]= 939, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 639.1239142910941, [shares]= 824, [time]= 2018-12-18T00:00:20.058173500, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Tim_Cook, [price]= 307.2204848807552, [shares]= 906, [time]= 2018-12-18T00:00:20.058173500, [type]= BUY, 
+
+[BROKER_NAME]: Broker3, [number of trades]: 20, [number of clients]: 3, 
+--------------------INFO BY CLIENT---------------------
+=========================================
+[clientName]= Elon_Musk, [sellTotalByClient]: 280111.1698824202, [buyTotalByClient]: 1519855.2927177583
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 321.9075902075024, [shares]= 386, [time]= 2018-12-18T00:00:20.060174100, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 296.48080282221554, [shares]= 9, [time]= 2018-12-18T00:00:20.061175300, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 411.46653227564957, [shares]= 795, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 131.25806942240447, [shares]= 901, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 968.4827136818219, [shares]= 390, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 779.3821260325726, [shares]= 894, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 370.00475037473603, [shares]= 283, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 203.67717849106748, [shares]= 238, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+=========================================
+[clientName]= Tim_Cook, [sellTotalByClient]: 0.0, [buyTotalByClient]: 729131.5946632094
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 470.84006930836364, [shares]= 590, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 619.9414640503063, [shares]= 633, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 338.58050015764917, [shares]= 174, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+=========================================
+[clientName]= Sergey_Brin, [sellTotalByClient]: 618586.129491707, [buyTotalByClient]: 1103052.3680826847
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 547.0908713369395, [shares]= 195, [time]= 2018-12-18T00:00:20.062173500, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 404.6273227856589, [shares]= 644, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 489.98524713790914, [shares]= 33, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 84.31337761848955, [shares]= 71, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 541.6619693710428, [shares]= 745, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 658.4791828607133, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 944.4093446888814, [shares]= 747, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 405.8623310845577, [shares]= 267, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 50.42716750757137, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+--------------------INFO BY TICKER---------------------
+=========================================
+[stockTicker]= GOOG, [sellTotalByTicker]: 636159.7394010997, [buyTotalByTicker]: 1491388.9807590873
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 321.9075902075024, [shares]= 386, [time]= 2018-12-18T00:00:20.060174100, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 411.46653227564957, [shares]= 795, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 619.9414640503063, [shares]= 633, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 489.98524713790914, [shares]= 33, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 338.58050015764917, [shares]= 174, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 541.6619693710428, [shares]= 745, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Elon_Musk, [price]= 779.3821260325726, [shares]= 894, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 405.8623310845577, [shares]= 267, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+=========================================
+[stockTicker]= AAPL, [sellTotalByTicker]: 262537.5599730275, [buyTotalByTicker]: 616800.8574560719
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 296.48080282221554, [shares]= 9, [time]= 2018-12-18T00:00:20.061175300, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 547.0908713369395, [shares]= 195, [time]= 2018-12-18T00:00:20.062173500, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 131.25806942240447, [shares]= 901, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 968.4827136818219, [shares]= 390, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 84.31337761848955, [shares]= 71, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 658.4791828607133, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 370.00475037473603, [shares]= 283, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 50.42716750757137, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Elon_Musk, [price]= 203.67717849106748, [shares]= 238, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+=========================================
+[stockTicker]= AMZN, [sellTotalByTicker]: 0.0, [buyTotalByTicker]: 1243849.4172484933
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 470.84006930836364, [shares]= 590, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 404.6273227856589, [shares]= 644, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 944.4093446888814, [shares]= 747, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+
+"Elon_Musk" removed from "Broker3" version:
+[BROKER_NAME]: Broker3, [number of trades]: 12, [number of clients]: 2, 
+--------------------INFO BY CLIENT---------------------
+=========================================
+[clientName]= Tim_Cook, [sellTotalByClient]: 0.0, [buyTotalByClient]: 729131.5946632094
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 470.84006930836364, [shares]= 590, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 619.9414640503063, [shares]= 633, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 338.58050015764917, [shares]= 174, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+=========================================
+[clientName]= Sergey_Brin, [sellTotalByClient]: 618586.129491707, [buyTotalByClient]: 1103052.3680826847
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 547.0908713369395, [shares]= 195, [time]= 2018-12-18T00:00:20.062173500, [type]= SELL, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 404.6273227856589, [shares]= 644, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 489.98524713790914, [shares]= 33, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 84.31337761848955, [shares]= 71, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 541.6619693710428, [shares]= 745, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 658.4791828607133, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 944.4093446888814, [shares]= 747, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 405.8623310845577, [shares]= 267, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 50.42716750757137, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+--------------------INFO BY TICKER---------------------
+=========================================
+[stockTicker]= GOOG, [sellTotalByTicker]: 511903.4095810038, [buyTotalByTicker]: 467505.4669268258
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 619.9414640503063, [shares]= 633, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 489.98524713790914, [shares]= 33, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Tim_Cook, [price]= 338.58050015764917, [shares]= 174, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 541.6619693710428, [shares]= 745, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+[stockTicker]= GOOG, [clientName]= Sergey_Brin, [price]= 405.8623310845577, [shares]= 267, [time]= 2018-12-18T00:00:20.063173600, [type]= SELL, 
+=========================================
+[stockTicker]= AAPL, [sellTotalByTicker]: 106682.71991070319, [buyTotalByTicker]: 120829.07857057489
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 547.0908713369395, [shares]= 195, [time]= 2018-12-18T00:00:20.062173500, [type]= SELL, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 84.31337761848955, [shares]= 71, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 658.4791828607133, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+[stockTicker]= AAPL, [clientName]= Sergey_Brin, [price]= 50.42716750757137, [shares]= 162, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+=========================================
+[stockTicker]= AMZN, [sellTotalByTicker]: 0.0, [buyTotalByTicker]: 1243849.4172484933
+[stockTicker]= AMZN, [clientName]= Tim_Cook, [price]= 470.84006930836364, [shares]= 590, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 404.6273227856589, [shares]= 644, [time]= 2018-12-18T00:00:20.062173500, [type]= BUY, 
+[stockTicker]= AMZN, [clientName]= Sergey_Brin, [price]= 944.4093446888814, [shares]= 747, [time]= 2018-12-18T00:00:20.063173600, [type]= BUY, 
+
